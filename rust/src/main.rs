@@ -1,16 +1,17 @@
 extern crate time;
 
 use std::rand::{task_rng, Rng};
+use std::mem::replace;
 use time::precise_time_ns;
 
-#[deriving(Show)]
+#[deriving(Show, Clone)]
 struct Data {
     a: uint,
     b: uint,
     c: uint
 }
 
-#[deriving(Show)]
+#[deriving(Show, Clone)]
 enum Row {
     Cons(Data, Box<Row>),
     Nil
@@ -25,20 +26,25 @@ impl Row {
         Cons(d, box self)
     }
 
-    //fn a(self) -> uint {
-        //let a : Option<uint> = match self {
-            //Cons(a, _) => Some(a),
-            //_ => None
-        //};
-        //a.unwrap()
-    //}
+    fn find(~self, a: uint) -> Option<Data> {
+        let mut ls = self;
+        loop {
+            ls = match *ls {
+              Cons(data, tl) => {
+                if data.a == a { return Some(data.clone()); }
+                tl
+              }
+              Nil => return None
+            }
+        };
+    }
 }
 
 #[deriving(Show)]
 struct Relation {
     size: uint,
     size_index: uint,
-    index: Vec<Row>
+    index: Vec<Box<Row>>
 }
 
 impl Relation {
@@ -46,7 +52,7 @@ impl Relation {
         Relation {
             size: 0,
             size_index: size_index,
-            index: Vec::from_fn(size_index, |_| Nil)
+            index: Vec::from_fn(size_index, |_| box Nil)
         }
     }
 
@@ -59,14 +65,19 @@ impl Relation {
         let hash = self.hash(a);
         let data = Data {a: a, b: b, c: c};
 
-        match *self.index.get(hash) {
-            Cons(..) => (),
-            Nil      => { *self.index.get_mut(hash) = Row::new(data); }
+        let prepend = match **self.index.get(hash) {
+            Cons(..) => true,
+            Nil      => { *self.index.get_mut(hash) = box Row::new(data); false }
+        };
+
+        if prepend {
+            let old_row = replace(self.index.get_mut(hash), box Nil);
+            replace(self.index.get_mut(hash), box old_row.prepend(data));
         }
     }
 
-    fn lookup<'a>(&'a self, a: uint) -> &'a Row {
-        self.index.get(self.hash(a))
+    fn lookup<'a>(&'a self, a: uint) -> Option<Data> {
+        self.index.get(self.hash(a)).find(a)
     }
 }
 
@@ -100,13 +111,13 @@ fn main() {
         match *r {
             Cons(d, _) => {
                 let r2 = rel.lookup(d.a);
-                match *r2 {
-                    Cons(d2, _) => {
+                match r2 {
+                    Some(d2) => {
                         //if d.a != d2.a { println!("{} == {}", rel.hash(d.a), rel.hash(d2.a)); }
                         assert!(rel.hash(d.a) == rel.hash(d2.a));
-                        //assert!(d.a == d2.a);
+                        assert!(d.a == d2.a);
                     },
-                    Nil         => assert!(false)
+                    None     => assert!(false)
                 }
             },
             Nil => assert!(false)
