@@ -85,21 +85,18 @@ impl Relation {
 fn main() {
     let n: uint = 2500000;
     let mut rel = Relation::new(1u << 20);
-    let mut v: Vec<Row> = Vec::with_capacity(n);
+    let mut v: Vec<Data> = Vec::with_capacity(n);
 
     for i in range(0, n) {
-        v.push(Row::new(Data {a: i, b: i/3, c: i/7}));
+        v.push(Data {a: i, b: i/3, c: i/7});
     }
 
     let mut rng = task_rng();
     rng.shuffle(v.as_mut_slice());
 
     let mut time = precise_time_ns();
-    for row in v.iter() {
-        match *row {
-            Cons(d, _) => rel.insert(d.a, d.b, d.c),
-            Nil        => ()
-        }
+    for d in v.iter() {
+        rel.insert(d.a, d.b, d.c)
     }
     println!("insert: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
@@ -107,19 +104,10 @@ fn main() {
     rng.shuffle(v.as_mut_slice());
 
     time = precise_time_ns();
-    for r in v.iter() {
-        match *r {
-            Cons(d, _) => {
-                let r2 = rel.lookup(d.a);
-                match r2 {
-                    Some(d2) => {
-                        assert!(rel.hash(d.a) == rel.hash(d2.a));
-                        assert!(d.a == d2.a);
-                    },
-                    None     => assert!(false)
-                }
-            },
-            Nil => assert!(false)
+    for d in v.iter() {
+        match rel.lookup(d.a){
+            Some(d2) => assert!(d.a == d2.a),
+            None     => assert!(false)
         }
     }
     println!("lookup: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
