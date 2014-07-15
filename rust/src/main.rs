@@ -26,16 +26,13 @@ impl Row {
         Cons(d, box self)
     }
 
-    fn find(~self, a: uint) -> Option<Data> {
-        let mut ls = self;
-        loop {
-            ls = match *ls {
-              Cons(data, tl) => {
-                if data.a == a { return Some(data.clone()); }
-                tl
-              }
-              Nil => return None
+    fn find<'a>(&'a self, a: uint) -> Option<&'a Data> {
+        match *self {
+            Cons(ref data, ref tl) => {
+                if data.a == a { return Some(data); }
+                return tl.find(a)
             }
+            Nil => return None
         };
     }
 }
@@ -67,7 +64,10 @@ impl Relation {
 
         let prepend = match **self.index.get(hash) {
             Cons(..) => true,
-            Nil      => { *self.index.get_mut(hash) = box Row::new(data); false }
+            Nil      => {
+                *self.index.get_mut(hash) = box Row::new(data);
+                false
+            }
         };
 
         if prepend {
@@ -76,7 +76,7 @@ impl Relation {
         }
     }
 
-    fn lookup<'a>(&'a self, a: uint) -> Option<Data> {
+    fn lookup<'a>(&'a self, a: uint) -> Option<&'a Data> {
         self.index.get(self.hash(a)).find(a)
     }
 }
@@ -101,7 +101,7 @@ fn main() {
             Nil        => ()
         }
     }
-    println!("insert: {} ms", ((precise_time_ns() - time) as f64) / 1e6f64);
+    println!("insert: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
 
     rng.shuffle(v.as_mut_slice());
@@ -113,7 +113,6 @@ fn main() {
                 let r2 = rel.lookup(d.a);
                 match r2 {
                     Some(d2) => {
-                        //if d.a != d2.a { println!("{} == {}", rel.hash(d.a), rel.hash(d2.a)); }
                         assert!(rel.hash(d.a) == rel.hash(d2.a));
                         assert!(d.a == d2.a);
                     },

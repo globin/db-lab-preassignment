@@ -6,7 +6,3 @@ version = "0.0.0"
 authors = ["Robin Gloster <robin@loc-com.de>"]
 tags = []
 
-[[bin]]
-
-name = "db-lab"
-path = "src/main.rs"
