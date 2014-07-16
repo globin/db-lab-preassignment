@@ -41,7 +41,7 @@ impl Row {
 struct Relation {
     size: uint,
     size_index: uint,
-    index: Vec<Box<Row>>
+    index: Vec<Row>
 }
 
 impl Relation {
@@ -49,7 +49,7 @@ impl Relation {
         Relation {
             size: 0,
             size_index: size_index,
-            index: Vec::from_fn(size_index, |_| box Nil)
+            index: Vec::from_fn(size_index, |_| Nil)
         }
     }
 
@@ -62,17 +62,17 @@ impl Relation {
         let hash = self.hash(a);
         let data = Data {a: a, b: b, c: c};
 
-        let prepend = match **self.index.get(hash) {
+        let prepend = match *self.index.get(hash) {
             Cons(..) => true,
             Nil      => {
-                *self.index.get_mut(hash) = box Row::new(data);
+                *self.index.get_mut(hash) = Row::new(data);
                 false
             }
         };
 
         if prepend {
-            let old_row = replace(self.index.get_mut(hash), box Nil);
-            replace(self.index.get_mut(hash), box old_row.prepend(data));
+            let old_row = replace(self.index.get_mut(hash), Nil);
+            replace(self.index.get_mut(hash), old_row.prepend(data));
         }
     }
 
