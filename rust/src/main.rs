@@ -45,8 +45,9 @@ impl Row {
                 if data.a == a {
                     swap = true;
                     mem::swap(next, tmp)
+                } else {
+                    Row::remove(&mut **next, a)
                 }
-                else { Row::remove(&mut **next, a); }
             }
             Nil => ()
         }
@@ -69,7 +70,7 @@ impl Relation {
         Relation {
             size: 0,
             size_index: size_index,
-            index: Vec::from_fn(size_index, |_| Nil)
+            index: Vec::from_elem(size_index, Nil)
         }
     }
 
@@ -123,7 +124,7 @@ fn main() {
     for d in v.iter() {
         rel.insert(d.a, d.b, d.c)
     }
-    println!("insert: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("insert: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
 
     rng.shuffle(v.as_mut_slice());
@@ -152,6 +153,10 @@ fn main() {
             None     => assert!(true)
         }
     }
-    println!("remove: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
-    // TODO: check if all Nil
+    println!("remove: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+
+    assert!(rel.index.iter().all(|item| match *item {
+        Cons(..) => false,
+        Nil => true
+    }));
 }
