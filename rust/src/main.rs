@@ -1,20 +1,20 @@
 extern crate time;
 
 use std::rand::{task_rng, Rng};
-use std::mem::replace;
+use std::mem;
 use time::precise_time_ns;
 
 #[deriving(Show, Clone)]
 struct Data {
     a: uint,
     b: uint,
-    c: uint
+    c: uint,
 }
 
 #[deriving(Show, Clone)]
 enum Row {
     Cons(Data, Box<Row>),
-    Nil
+    Nil,
 }
 
 impl Row {
@@ -35,13 +35,32 @@ impl Row {
             Nil => return None
         };
     }
+
+    fn remove(row: &mut Row, a: uint) {
+        let tmp = &mut box Nil;
+
+        match *row {
+            Cons(ref data, ref mut next) => {
+                if data.a == a { mem::swap(next, tmp) }
+                else { Row::remove(&mut **next, a); }
+            }
+            Nil => ()
+        }
+
+        match **tmp {
+            Cons(..) => (
+                mem::swap(row, &mut **tmp)
+            ),
+            Nil => ()
+        }
+    }
 }
 
 #[deriving(Show)]
 struct Relation {
     size: uint,
     size_index: uint,
-    index: Vec<Row>
+    index: Vec<Row>,
 }
 
 impl Relation {
@@ -71,16 +90,23 @@ impl Relation {
         };
 
         if prepend {
-            let old_row = replace(self.index.get_mut(hash), Nil);
-            replace(self.index.get_mut(hash), old_row.prepend(data));
+            let old_row = mem::replace(self.index.get_mut(hash), Nil);
+            mem::swap(self.index.get_mut(hash), &mut old_row.prepend(data));
         }
     }
 
     fn lookup<'a>(&'a self, a: uint) -> Option<&'a Data> {
         self.index.get(self.hash(a)).find(a)
     }
-}
 
+    fn remove(&mut self, data: &Data) {
+        let hash = self.hash(data.a);
+
+        println!("{}", self.index.get(hash));
+        Row::remove(self.index.get_mut(hash), data.a);
+        println!("{}\n", self.index.get(hash));
+    }
+}
 
 fn main() {
     let n: uint = 2500000;
@@ -111,4 +137,25 @@ fn main() {
         }
     }
     println!("lookup: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
+
+
+    // TODO: scan
+
+
+    rng.shuffle(v.as_mut_slice());
+
+    time = precise_time_ns();
+    for d in v.iter() {
+        rel.lookup(d.a).unwrap();
+        rel.remove(d);
+        match rel.lookup(d.a){
+            Some(d2) => {
+                println!("{} {}", d, d2);
+                assert!(false);
+            },
+            None     => assert!(true)
+        }
+    }
+    println!("remove: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    // TODO: check if all Nil
 }

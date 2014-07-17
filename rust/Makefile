@@ -40,10 +40,17 @@ SOURCE_FILES = $(shell test -e src/ && find src -type f)
 
 COMPILER = rustc
 
-# For release:
-  COMPILER_FLAGS = -O
-# For debugging:
-# COMPILER_FLAGS = -g
+DEBUG_COMPILER_FLAGS = -g -W non-uppercase-statics -W unnecessary-qualification -W unnecessary-typecast -W unused-result -W variant-size-difference
+RELEASE_COMPILER_FLAGS = --opt-level 3
+VERSION = DEBUG
+
+ifeq "$(VERSION)" "DEBUG"
+	COMPILER_FLAGS = $(DEBUG_COMPILER_FLAGS)
+else
+	ifeq "$(VERSION)" "RELEASE"
+	COMPILER_FLAGS = $(RELEASE_COMPILER_FLAGS)
+endif
+endif
 
 RUSTDOC = rustdoc
 
