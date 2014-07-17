@@ -36,6 +36,20 @@ impl Row {
         };
     }
 
+    fn next<'a>(&'a self) -> Option<&'a Row> {
+        match *self {
+            Cons(_, ref next) => Some(&**next),
+            Nil => None
+        }
+    }
+
+    fn data<'a>(&'a self) -> &'a Data {
+        match *self {
+            Cons(ref data, _) => data,
+            Nil => fail!("fnord")
+        }
+    }
+
     fn remove(row: &mut Row, a: uint) {
         let tmp = &mut box Nil;
         let mut swap = false;
@@ -136,10 +150,26 @@ fn main() {
             None     => assert!(false)
         }
     }
-    println!("lookup: {} s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("lookup: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
 
-    // TODO: scan
+    let mut sum = 0u;
+    time = precise_time_ns();
+    for row in rel.index.iter() {
+        match *row {
+            Cons(ref data, ref next) => {
+                sum += data.a;
+                let mut iter_row = &**next;
+                while iter_row.next().is_some() {
+                    sum += iter_row.data().a;
+                    iter_row = iter_row.next().unwrap();
+                }
+            },
+            Nil => ()
+        }
+    }
+    println!("scan: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    assert_eq!(n*(n-1)/2, sum);
 
 
     rng.shuffle(v.as_mut_slice());
