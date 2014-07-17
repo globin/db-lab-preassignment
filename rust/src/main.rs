@@ -38,20 +38,21 @@ impl Row {
 
     fn remove(row: &mut Row, a: uint) {
         let tmp = &mut box Nil;
+        let mut swap = false;
 
         match *row {
             Cons(ref data, ref mut next) => {
-                if data.a == a { mem::swap(next, tmp) }
+                if data.a == a {
+                    swap = true;
+                    mem::swap(next, tmp)
+                }
                 else { Row::remove(&mut **next, a); }
             }
             Nil => ()
         }
 
-        match **tmp {
-            Cons(..) => (
-                mem::swap(row, &mut **tmp)
-            ),
-            Nil => ()
+        if swap {
+            mem::swap(row, &mut **tmp);
         }
     }
 }
@@ -81,7 +82,7 @@ impl Relation {
         let hash = self.hash(a);
         let data = Data {a: a, b: b, c: c};
 
-        let prepend = match *self.index.get(hash) {
+        let prepend = match self.index[hash] {
             Cons(..) => true,
             Nil      => {
                 *self.index.get_mut(hash) = Row::new(data);
@@ -96,15 +97,13 @@ impl Relation {
     }
 
     fn lookup<'a>(&'a self, a: uint) -> Option<&'a Data> {
-        self.index.get(self.hash(a)).find(a)
+        self.index[self.hash(a)].find(a)
     }
 
     fn remove(&mut self, data: &Data) {
         let hash = self.hash(data.a);
 
-        println!("{}", self.index.get(hash));
         Row::remove(self.index.get_mut(hash), data.a);
-        println!("{}\n", self.index.get(hash));
     }
 }
 
@@ -149,10 +148,7 @@ fn main() {
         rel.lookup(d.a).unwrap();
         rel.remove(d);
         match rel.lookup(d.a){
-            Some(d2) => {
-                println!("{} {}", d, d2);
-                assert!(false);
-            },
+            Some(..) => assert!(false),
             None     => assert!(true)
         }
     }
