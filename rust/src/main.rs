@@ -138,7 +138,7 @@ fn main() {
     for d in v.iter() {
         rel.insert(d.a, d.b, d.c)
     }
-    println!("insert: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("insert {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
 
     rng.shuffle(v.as_mut_slice());
@@ -146,11 +146,11 @@ fn main() {
     time = precise_time_ns();
     for d in v.iter() {
         match rel.lookup(d.a){
-            Some(d2) => assert!(d.a == d2.a),
+            Some(d2) => assert_eq!(d.a, d2.a),
             None     => assert!(false)
         }
     }
-    println!("lookup: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("lookup {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
 
     let mut sum = 0u;
@@ -168,7 +168,7 @@ fn main() {
             Nil => ()
         }
     }
-    println!("scan: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("scan {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
     assert_eq!(n*(n-1)/2, sum);
 
 
@@ -178,12 +178,12 @@ fn main() {
     for d in v.iter() {
         rel.lookup(d.a).unwrap();
         rel.remove(d);
-        match rel.lookup(d.a){
+        match rel.lookup(d.a) {
             Some(..) => assert!(false),
             None     => assert!(true)
         }
     }
-    println!("remove: {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
+    println!("remove {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
     assert!(rel.index.iter().all(|item| match *item {
         Cons(..) => false,
