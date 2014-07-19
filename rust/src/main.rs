@@ -50,24 +50,24 @@ impl Row {
         }
     }
 
-    fn remove(row: &mut Row, a: uint) {
+    fn remove(&mut self, a: uint) {
         let tmp = &mut box Nil;
         let mut swap = false;
 
-        match *row {
+        match *self {
             Cons(ref data, ref mut next) => {
                 if data.a == a {
                     swap = true;
                     mem::swap(next, tmp)
                 } else {
-                    Row::remove(&mut **next, a)
+                    next.remove(a)
                 }
             }
             Nil => ()
         }
 
         if swap {
-            mem::swap(row, &mut **tmp);
+            mem::swap(self, &mut **tmp);
         }
     }
 }
@@ -118,7 +118,7 @@ impl Relation {
     fn remove(&mut self, data: &Data) {
         let hash = self.hash(data.a);
 
-        Row::remove(self.index.get_mut(hash), data.a);
+        self.index.get_mut(hash).remove(data.a);
     }
 }
 
@@ -176,12 +176,9 @@ fn main() {
 
     time = precise_time_ns();
     for d in v.iter() {
-        rel.lookup(d.a).unwrap();
+        assert!(rel.lookup(d.a).is_some());
         rel.remove(d);
-        match rel.lookup(d.a) {
-            Some(..) => assert!(false),
-            None     => assert!(true)
-        }
+        assert!(rel.lookup(d.a).is_none());
     }
     println!("remove {}s", ((precise_time_ns() - time) as f64) / 1e9f64);
 
