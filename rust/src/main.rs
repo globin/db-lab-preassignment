@@ -26,7 +26,7 @@ impl Row {
         Cons(d, box self)
     }
 
-    fn find<'a>(&'a self, a: uint) -> Option<&'a Data> {
+    fn find(&self, a: uint) -> Option<&Data> {
         match *self {
             Cons(ref data, ref tl) => {
                 if data.a == a { return Some(data); }
@@ -36,14 +36,14 @@ impl Row {
         };
     }
 
-    fn next<'a>(&'a self) -> Option<&'a Row> {
+    fn next(&self) -> Option<&Row> {
         match *self {
             Cons(_, ref next) => Some(&**next),
             Nil => None
         }
     }
 
-    fn data<'a>(&'a self) -> &'a Data {
+    fn data(&self) -> &Data {
         match *self {
             Cons(ref data, _) => data,
             Nil => fail!("fnord")
@@ -111,7 +111,7 @@ impl Relation {
         }
     }
 
-    fn lookup<'a>(&'a self, a: uint) -> Option<&'a Data> {
+    fn lookup(&self, a: uint) -> Option<&Data> {
         self.index[self.hash(a)].find(a)
     }
 
